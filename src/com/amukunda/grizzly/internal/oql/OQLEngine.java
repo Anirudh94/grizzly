@@ -32,7 +32,9 @@
 
 package com.amukunda.grizzly.internal.oql;
 
-import com.amukunda.grizzly.internal.model.*;
+import com.amukunda.grizzly.internal.model.JavaClass;
+import com.amukunda.grizzly.internal.model.JavaHeapObject;
+import com.amukunda.grizzly.internal.model.Snapshot;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -52,7 +54,7 @@ public class OQLEngine {
 
             // create JavaScript engine
             Method getEngineMethod = managerClass.getMethod("getEngineByName",
-                                new Class[] { String.class });
+                    new Class[] { String.class });
             Object jse = getEngineMethod.invoke(manager, new Object[] {"js"});
             oqlSupported = (jse != null);
         } catch (Exception exp) {
@@ -73,15 +75,15 @@ public class OQLEngine {
     }
 
     /**
-       Query is of the form
+     Query is of the form
 
-          select &lt;java script code to select&gt;
-          [ from [instanceof] &lt;class name&gt; [&lt;identifier&gt;]
-            [ where &lt;java script boolean expression&gt; ]
-          ]
-    */
+     select &lt;java script code to select&gt;
+     [ from [instanceof] &lt;class name&gt; [&lt;identifier&gt;]
+     [ where &lt;java script boolean expression&gt; ]
+     ]
+     */
     public synchronized void executeQuery(String query, ObjectVisitor visitor)
-                                          throws OQLException {
+            throws OQLException {
         debugPrint("query : " + query);
         StringTokenizer st = new StringTokenizer(query);
         if (st.hasMoreTokens()) {
@@ -162,11 +164,11 @@ public class OQLEngine {
         }
 
         executeQuery(new OQLQuery(selectExpr, isInstanceOf, className,
-                                  identifier, whereExpr), visitor);
+                identifier, whereExpr), visitor);
     }
 
     private void executeQuery(OQLQuery q, ObjectVisitor visitor)
-                              throws OQLException {
+            throws OQLException {
         JavaClass clazz = null;
         if (q.className != null) {
             clazz = snapshot.findClass(q.className);
@@ -266,14 +268,14 @@ public class OQLEngine {
 
             // create JavaScript engine
             Method getEngineMethod = managerClass.getMethod("getEngineByName",
-                                new Class[] { String.class });
+                    new Class[] { String.class });
             engine = getEngineMethod.invoke(manager, new Object[] {"js"});
 
             // initialize engine with init file (hat.js)
             InputStream strm = getInitStream();
             Class<?> engineClass = Class.forName("javax.script.ScriptEngine");
             evalMethod = engineClass.getMethod("eval",
-                                new Class[] { Reader.class });
+                    new Class[] { Reader.class });
             evalMethod.invoke(engine, new Object[] {new InputStreamReader(strm)});
 
             // initialize ScriptEngine.eval(String) and
@@ -281,13 +283,13 @@ public class OQLEngine {
             Class<?> invocableClass = Class.forName("javax.script.Invocable");
 
             evalMethod = engineClass.getMethod("eval",
-                                  new Class[] { String.class });
+                    new Class[] { String.class });
             invokeMethod = invocableClass.getMethod("invokeFunction",
-                                  new Class[] { String.class, Object[].class });
+                    new Class[] { String.class, Object[].class });
 
             // initialize ScriptEngine.put(String, Object) method
             Method putMethod = engineClass.getMethod("put",
-                                  new Class[] { String.class, Object.class });
+                    new Class[] { String.class, Object.class });
 
             // call ScriptEngine.put to initialize built-in heap object
             putMethod.invoke(engine, new Object[] {
@@ -300,13 +302,13 @@ public class OQLEngine {
     }
 
     private InputStream getInitStream() {
-        return getClass().getResourceAsStream("/com/sun/tools/hat/resources/hat.js");
+        return getClass().getResourceAsStream("/com/amukunda/grizzly/hat.js");
     }
 
     private Object engine;
     private Method evalMethod;
     private Method invokeMethod;
     private Snapshot snapshot;
-    private static boolean debug = false;
+    private static boolean debug = true;
     private static boolean oqlSupported;
 }
